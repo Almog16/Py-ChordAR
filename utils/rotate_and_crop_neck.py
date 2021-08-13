@@ -1,3 +1,5 @@
+from matplotlib import pyplot as plt
+
 from utils.image import Image
 from itertools import chain
 from math import inf
@@ -9,31 +11,31 @@ import numpy as np
 from utils.image import apply_threshold
 
 
-def crop_neck(guitar_image: Image) -> Image:
-    # TODO: improve
-    rotated = rotate_img(guitar_image)
-
-    edges = cv2.Canny(rotated.blur_gray, 20, 180)
+def crop_neck(rotated_guitar_image: Image) -> (Image, int, int):
+    plt.show()
+    edges = cv2.Canny(image=rotated_guitar_image.blur_gray, threshold1=20, threshold2=180)
     mag = get_magnitude(edges)
-    mag = apply_threshold(img=mag, threshold=127)
+    # mag = apply_threshold(img=mag, threshold=127)
+    ret, mag = cv2.threshold(src=mag, thresh=127, maxval=255, type=cv2.THRESH_BINARY)
 
-    lines = cv2.HoughLinesP(mag, 1, np.pi / 180, 15, 50, 50)
+    lines = cv2.HoughLinesP(image=mag.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=18, minLineLength=50)
     y = chain.from_iterable(itemgetter(1, 3)(line[0]) for line in lines)
-    y_sort = list(sorted(y))
+    y = list(sorted(y))
     y_differences = [0]
 
     first_y = 0
     last_y = inf
 
-    for i in range(len(y_sort) - 1):
-        y_differences.append(y_sort[i + 1] - y_sort[i])
+    for i in range(len(y) - 1):
+        y_differences.append(y[i + 1] - y[i])
     for i in range(len(y_differences) - 1):
         if y_differences[i] == 0:
-            last_y = y_sort[i]
+            last_y = y[i]
             if i > 3 and first_y == 0:
-                first_y = y_sort[i]
+                first_y = y[i]
 
-    return Image(img=rotated.color_img[first_y - 10:last_y + 10])
+    return Image(img=rotated_guitar_image.color_img[first_y - 10:last_y + 10],
+                 file_name=rotated_guitar_image.name), first_y - 10, last_y + 10
 
 
 def rotate_img(guitar_image: Image) -> Image:
@@ -43,7 +45,7 @@ def rotate_img(guitar_image: Image) -> Image:
     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
     rotated = cv2.warpAffine(guitar_image.color_img, rot_mat, guitar_image.color_img.shape[1::-1],
                              flags=cv2.INTER_LINEAR)
-    return Image(img=rotated)
+    return Image(img=rotated, file_name=guitar_image.name)
 
 
 def calc_med_slope(guitar_image: Image) -> float:

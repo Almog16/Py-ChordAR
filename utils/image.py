@@ -1,23 +1,32 @@
+from pathlib import Path
+
 import cv2
 import matplotlib.pyplot as plt
 
 
 class Image:
-    def __init__(self, img_path=None, img=None):
+    def __init__(self, img_path: Path=None, img=None, file_name: str=""):
         if img is None:
-            self.color_img = self.load_img(img_path)
+            self.color_img = self.load_img(str(img_path))
         else:
             self.color_img = img
+        self.name = file_name
         self.gray = self.img_to_gray(self.color_img)
-        self.blur_gray = cv2.GaussianBlur(self.gray, (3, 3), 0)
         self.height = len(self.color_img)
         self.width = len(self.color_img[0])
+        ksize = int(self.width * 0.003)
+        ksize = ksize if ksize % 2 == 1 else ksize + 1
+        self.blur_gray = cv2.GaussianBlur(self.gray, (ksize, ksize), 0)
 
     def plot_img(self, gray=False):
         fig2 = plt.figure(figsize=(15, 15))  # create a 15 x 15 figure
         ax3 = fig2.add_subplot(111)
-        ax3.imshow(self.color_img, interpolation='none') if not gray \
-            else ax3.imshow(self.gray, interpolation='none', cmap='gray')
+        plt.imshow(self.color_img, interpolation='none') if not gray \
+            else plt.imshow(self.gray, interpolation='none', cmap='gray')
+
+    def save_img(self):
+        plt.imsave(str(Path(rf"C:\Users\almogsh\PycharmProjects\Py-ChordAR\photos\working\test\{self.name}.png")),
+                   self.color_img)
 
     @staticmethod
     def load_img(file_path):
@@ -32,6 +41,7 @@ class Image:
 
 
 def apply_threshold(img, threshold):
-    img[img < threshold] = 0
-    img[img >= threshold] = 255
-    return img
+    ret_img = img#.copy()
+    ret_img[ret_img < threshold] = 0
+    ret_img[ret_img >= threshold] = 255
+    return ret_img
