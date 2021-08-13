@@ -17,3 +17,4 @@ if __name__ == '__main__':
     # guitar = GuitarImage(img_path=Path(rf"C:\Users\almogsh\PycharmProjects\Py-ChordAR\photos\working\1_.jpg"), file_name=r"1_.jpg")
     # guitar.draw_chord(Emaj_chord)
 
+    # test
