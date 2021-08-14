@@ -34,8 +34,8 @@ def crop_neck(rotated_guitar_image: Image) -> (Image, int, int):
             if i > 3 and first_y == 0:
                 first_y = y[i]
 
-    return Image(img=rotated_guitar_image.color_img[first_y - 10:last_y + 10],
-                 file_name=rotated_guitar_image.name), first_y - 10, last_y + 10
+    return Image(img=rotated_guitar_image.color_img[first_y - 10:last_y + 10]), first_y - 10, last_y + 10
+                 # file_name=rotated_guitar_image.name), first_y - 10, last_y + 10
 
 
 def rotate_img(guitar_image: Image) -> Image:
@@ -45,7 +45,7 @@ def rotate_img(guitar_image: Image) -> Image:
     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
     rotated = cv2.warpAffine(guitar_image.color_img, rot_mat, guitar_image.color_img.shape[1::-1],
                              flags=cv2.INTER_LINEAR)
-    return Image(img=rotated, file_name=guitar_image.name)
+    return Image(img=rotated)  # , file_name=guitar_image.name)
 
 
 def calc_med_slope(guitar_image: Image) -> float:
