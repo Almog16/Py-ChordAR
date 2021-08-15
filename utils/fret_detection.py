@@ -14,7 +14,7 @@ def cm_to_pixels(cm: float):
     return cm * PIXELS_PER_CENTIMETER
 
 
-def fret_detection(cropped_neck_img: Image):
+def fret_detection(cropped_neck_img: Image) -> np.array:
     edges = cv2.Sobel(cropped_neck_img.blur_gray, cv2.CV_64F, 1, 0)
     edges = apply_threshold(img=edges, threshold=50)
     # edges = cv2.adaptiveThreshold(src=edges.astype(np.uint8), dst=edges, maxValue=255, adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
