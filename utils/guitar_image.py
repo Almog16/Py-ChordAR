@@ -2,9 +2,8 @@ from collections import namedtuple
 from itertools import chain
 from math import inf
 from operator import itemgetter
-from pathlib import Path
 from statistics import median
-from typing import Tuple, Iterable, Sized, List
+from typing import Tuple, Sized, List
 
 import cv2
 import numpy as np
@@ -16,9 +15,10 @@ from utils.string_detection import string_detection
 
 class GuitarImage(Image):
     Crop_Area = namedtuple('Crop_Area', ['higher_y', 'lower_y'])
+    Coordinate = namedtuple("Coordinate", ["x", "y"])
 
-    def __init__(self, img_path: Path = None, img=None) -> None:  # , file_name:str=""):
-        Image.__init__(self, img_path=img_path, img=None)  # , file_name=file_name)
+    def __init__(self, **kwargs) -> None:  # , file_name:str=""):
+        Image.__init__(self, **kwargs)  # , file_name=file_name)
         self.rotated = self.rotate_img()
         crop_res = self.crop_neck()
         self.cropped = crop_res[0]
@@ -41,15 +41,14 @@ class GuitarImage(Image):
         ]
         return list(reversed([(line[0] + line[1]) // 2 for line in detected_frets_pairwise]))
 
-    def get_chord_coordinates(self, chord_to_draw: str):
+    def get_chord_coordinates(self, chord_to_draw: str) -> List[Coordinate]:
         note_by_string = chord_to_draw.split(',')
         drawing_coordinates = []
-        Coordinate = namedtuple("Coordinate", ["x", "y"])
         for string, fret in enumerate(note_by_string):
             if fret != 'x' and string <= len(self.strings) - 1:
                 y = self.strings[int(string)] + self.crop_area.higher_y
                 x = self.frets[int(fret) - 1]
-                drawing_coordinates.append(Coordinate(x, y))
+                drawing_coordinates.append(self.Coordinate(x, y))
                 # cv2.circle(img=self.rotated.color_img, center=(x, y), radius=1, color=(0, 187, 255), thickness=int(self.cropped.width * 0.008))
         # self.rotated.save_img()
         print(drawing_coordinates)
