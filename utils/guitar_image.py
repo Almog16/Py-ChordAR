@@ -25,6 +25,8 @@ class GuitarImage(Image):
         crop_res = self.crop_neck()
         self.cropped = crop_res[0]
         self.crop_area = self.Crop_Area(crop_res[1], crop_res[2])
+        self.cropped.plot_img()
+        plt.show()
         detected_frets = fret_detection(cropped_neck_img=self.cropped)
         self.frets = self.calculate_frets_xs(detected_frets=detected_frets)
         # height = self.cropped.height // 2
