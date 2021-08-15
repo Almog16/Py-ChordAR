@@ -8,6 +8,7 @@ from typing import Tuple, Sized, List
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 
 from utils.fret_detection import fret_detection
 from utils.image import Image
@@ -32,8 +33,8 @@ class GuitarImage(Image):
         detected_strings = string_detection(cropped_neck_img=self.cropped, fret_lines=detected_frets)
         self.strings = [(string[1] + string[3]) // 2 for string in detected_strings]
         # self.cropped.save_img()
-        # self.cropped.plot_img()
-        # plt.show()
+        self.rotated.plot_img()
+        plt.show()
 
     @staticmethod
     def calculate_frets_xs(detected_frets: Sized) -> List[int]:
@@ -50,9 +51,9 @@ class GuitarImage(Image):
                 y = self.strings[int(string)] + self.crop_area.higher_y
                 x = self.frets[int(fret) - 1]
                 drawing_coordinates.append(self.Coordinate(x, y))
-                # cv2.circle(img=self.rotated.color_img, center=(x, y), radius=1, color=(0, 187, 255), thickness=int(self.cropped.width * 0.008))
+                cv2.circle(img=self.rotated.color_img, center=(x, y), radius=1, color=(0, 187, 255), thickness=int(self.cropped.width * 0.008))
         # self.rotated.save_img()
-        print(drawing_coordinates)
+        # print(drawing_coordinates)
         return drawing_coordinates
 
     def crop_neck(self) -> Tuple[Image, int, int]:

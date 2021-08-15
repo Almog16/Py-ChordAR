@@ -28,17 +28,17 @@ def fret_detection(cropped_neck_img: Image) -> np.array:
     lines = sorted(lines, key=lambda line: line[0])
     lines = np.array(remove_duplicate_vertical_lines(lines))
 
-    # low_ys = np.array([min(line[1], line[3]) for line in lines])
-    # high_ys = np.array([max(line[1], line[3]) for line in lines])
-    # avg_low_y = int(np.average(low_ys))
-    # avg_high_y = int(np.average(high_ys))
-    # for line in lines:
-    #     x1, x2 = line[0], line[2]
-    #     y1 = line[1] if 1.05 * avg_low_y >= line[1] >= 0.95 * avg_low_y else avg_low_y - 5
-    #     y2 = line[3] if 1.05 * avg_high_y >= line[3] >= 0.95 * avg_high_y else avg_high_y + 5
-    #     cv2.line(img=cropped_neck_img.color_img, pt1=(x1, y1), pt2=(x2, y2), color=(0, 255, 0),
-    #              thickness=int(cropped_neck_img.width * 0.002))
-    # cropped_neck_img.plot_img()
+    low_ys = np.array([min(line[1], line[3]) for line in lines])
+    high_ys = np.array([max(line[1], line[3]) for line in lines])
+    avg_low_y = int(np.average(low_ys))
+    avg_high_y = int(np.average(high_ys))
+    for line in lines:
+        x1, x2 = line[0], line[2]
+        y1 = line[1] if 1.05 * avg_low_y >= line[1] >= 0.95 * avg_low_y else avg_low_y - 5
+        y2 = line[3] if 1.05 * avg_high_y >= line[3] >= 0.95 * avg_high_y else avg_high_y + 5
+        cv2.line(img=cropped_neck_img.color_img, pt1=(x1, y1), pt2=(x2, y2), color=(0, 255, 0),
+                 thickness=int(cropped_neck_img.width * 0.002))
+    cropped_neck_img.plot_img()
     # calculate_fret_gaps(detected_frets=[itemgetter(0, 2)(x) for x in lines])
     return lines
 
