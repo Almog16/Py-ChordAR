@@ -1,3 +1,4 @@
+import math
 from collections import namedtuple
 from itertools import chain
 from math import inf
@@ -21,12 +22,12 @@ class GuitarImage(Image):
 
     def __init__(self, **kwargs) -> None:  # , file_name:str=""):
         Image.__init__(self, **kwargs)  # , file_name=file_name)
-        self.rotated = self.rotate_img()
+        self.rotated, self.rotation_angle, self.image_center = self.rotate_img()
         crop_res = self.crop_neck()
         self.cropped = crop_res[0]
         self.crop_area = self.Crop_Area(crop_res[1], crop_res[2])
-        self.cropped.plot_img()
-        plt.show()
+        # self.cropped.plot_img()
+        # plt.show()
         detected_frets = fret_detection(cropped_neck_img=self.cropped)
         self.frets = self.calculate_frets_xs(detected_frets=detected_frets)
         # height = self.cropped.height // 2
@@ -35,7 +36,7 @@ class GuitarImage(Image):
         detected_strings = string_detection(cropped_neck_img=self.cropped, fret_lines=detected_frets)
         self.strings = [(string[1] + string[3]) // 2 for string in detected_strings]
         # self.cropped.save_img()
-        self.rotated.plot_img()
+        # self.rotated.plot_img()
         plt.show()
 
     @staticmethod
@@ -52,18 +53,36 @@ class GuitarImage(Image):
             if fret != 'x' and string <= len(self.strings) - 1:
                 y = self.strings[int(string)] + self.crop_area.higher_y
                 x = self.frets[int(fret) - 1]
-                drawing_coordinates.append(self.Coordinate(x, y))
-                cv2.circle(img=self.rotated.color_img, center=(x, y), radius=1, color=(0, 187, 255), thickness=int(self.cropped.width * 0.008))
+                restored_coordinate = self.restore_coordinates(rotated_X=x, rotated_Y=y, center=self.image_center)
+                drawing_coordinates.append(restored_coordinate)
+                cv2.circle(
+                    img=self.color_img,
+                    center=(restored_coordinate.x, restored_coordinate.y),
+                    radius=1,
+                    color=(0, 187, 255),
+                    thickness=int(self.cropped.width * 0.008))
+
+                # cv2.circle(
+                #     img=self.rotated.color_img,
+                #     center=(x, y),
+                #     radius=1,
+                #     color=(0, 187, 255),
+                #     thickness=int(self.cropped.width * 0.008))
         # self.rotated.save_img()
+        # self.rotated.plot_img()
+        self.plot_img()
+        plt.show()
         # print(drawing_coordinates)
         return drawing_coordinates
 
     def crop_neck(self) -> Tuple[Image, int, int]:
-        edges = cv2.Canny(image=self.rotated.blur_gray, threshold1=20, threshold2=180)
+        edges = cv2.Canny(image=self.rotated.blur_gray, threshold1=20, threshold2=45)
+        edges = cv2.Canny(image=edges, threshold1=20, threshold2=180)
         mag = self.get_magnitude(edges)
         # mag = apply_threshold(img=mag, threshold=127)
         ret, mag = cv2.threshold(src=mag, thresh=127, maxval=255, type=cv2.THRESH_BINARY)
-
+        # plt.imshow(mag, interpolation='none', cmap='gray')
+        # plt.show()
         lines = cv2.HoughLinesP(image=mag.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=18, minLineLength=50)
         y = chain.from_iterable(itemgetter(1, 3)(line[0]) for line in lines)
         y = list(sorted(y))
@@ -83,13 +102,13 @@ class GuitarImage(Image):
         return Image(img=self.rotated.color_img[first_y - 10:last_y + 10]), first_y - 10, last_y + 10
         # file_name=rotated_guitar_image.name), first_y - 10, last_y + 10
 
-    def rotate_img(self) -> Image:
+    def rotate_img(self) -> Tuple[Image, float, Tuple[float, float]]:
         med_slope = self.calc_med_slope()
-        angle = med_slope * 55
+        rotation_angle = med_slope * 55
         image_center = tuple(np.array(self.color_img.shape[1::-1]) / 2)
-        rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+        rot_mat = cv2.getRotationMatrix2D(image_center, rotation_angle, 1.0)
         rotated = cv2.warpAffine(self.color_img, rot_mat, self.color_img.shape[1::-1], flags=cv2.INTER_LINEAR)
-        return Image(img=rotated)  # , file_name=guitar_image.name)
+        return Image(img=rotated), rotation_angle, image_center  # , file_name=guitar_image.name)
 
     def calc_med_slope(self) -> float:
         edges = cv2.Canny(self.blur_gray, 30, 150)
@@ -109,3 +128,10 @@ class GuitarImage(Image):
         magnitude = np.sqrt((gradient_X ** 2) + (gradient_Y ** 2))
         magnitude = cv2.convertScaleAbs(magnitude)
         return magnitude
+
+    def restore_coordinates(self, rotated_X: int, rotated_Y: int, center: Tuple[float, float]) -> Coordinate:
+        rad = -self.rotation_angle * math.pi / 180
+        p, q = center
+        restored_X = ((rotated_X - p) * math.cos(rad)) - ((rotated_Y - q) * math.sin(rad)) + p
+        restored_Y = ((rotated_X - p) * math.sin(rad)) + ((rotated_Y - q) * math.cos(rad)) + q
+        return self.Coordinate(x=int(restored_X), y=int(restored_Y))
