@@ -130,7 +130,7 @@ class GuitarImage(Image):
         return magnitude
 
     def restore_coordinates(self, rotated_X: int, rotated_Y: int, center: Tuple[float, float]) -> Coordinate:
-        rad = -self.rotation_angle * math.pi / 180
+        rad = self.rotation_angle * math.pi / 180
         p, q = center
         restored_X = ((rotated_X - p) * math.cos(rad)) - ((rotated_Y - q) * math.sin(rad)) + p
         restored_Y = ((rotated_X - p) * math.sin(rad)) + ((rotated_Y - q) * math.cos(rad)) + q
