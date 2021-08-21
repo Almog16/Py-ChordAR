@@ -22,7 +22,7 @@ def fret_detection(cropped_neck_img: Image) -> np.array:
     kernel = np.ones((5, 5), np.uint8)
     closing = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
     lines = cv2.HoughLinesP(image=closing.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=15,
-                            minLineLength=cropped_neck_img.height * 0.5, maxLineGap=5)
+                            minLineLength=cropped_neck_img.height * 0.5, maxLineGap=10)
 
     lines = [line[0] for line in lines if 1.01 * line[0][2] >= line[0][0] >= 0.99 * line[0][2]]
     lines = sorted(lines, key=lambda line: line[0])
@@ -38,7 +38,8 @@ def fret_detection(cropped_neck_img: Image) -> np.array:
         y2 = line[3] if 1.05 * avg_high_y >= line[3] >= 0.95 * avg_high_y else avg_high_y + 5
         cv2.line(img=cropped_neck_img.color_img, pt1=(x1, y1), pt2=(x2, y2), color=(0, 255, 0),
                  thickness=int(cropped_neck_img.width * 0.002))
-    # cropped_neck_img.plot_img()
+    cropped_neck_img.plot_img()
+    plt.show()
     # calculate_fret_gaps(detected_frets=[itemgetter(0, 2)(x) for x in lines])
     return lines
 

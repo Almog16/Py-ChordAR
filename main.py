@@ -15,5 +15,5 @@ if __name__ == '__main__':
         except Exception as e:
             print(rf"{filename} : {e}")
     # guitar = GuitarImage(img_path=Path(
-    #     rf"C:\Users\almogsh\PycharmProjects\Py_ChordAR\photos\guitar5_FLIPPED.jfif"))  # , file_name=r"1_.jpg")
+    #     rf"C:\Users\almogsh\PycharmProjects\Py_ChordAR\photos\guitar5_good.jfif"))  # , file_name=r"1_.jpg")
     # guitar.get_chord_coordinates(Emaj_chord)
