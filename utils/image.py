@@ -17,8 +17,8 @@ class Image:
         self.enhanced_color = self.enhance_image()
         self.gray = self.img_to_gray(self.enhanced_color)
 
-        ksize = int(self.width * 0.003)
-        ksize = ksize if ksize % 2 == 1 else ksize + 1
+        ksize = 5 #int(self.width * 0.0025)
+        # ksize = ksize if ksize % 2 == 1 else ksize + 1
         self.blur_gray = cv2.GaussianBlur(self.gray, (ksize, ksize), 0)
 
     def plot_img(self, gray=False):
@@ -44,15 +44,19 @@ class Image:
     def enhance_image(self):
         # kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
         # im = cv2.filter2D(self.color_img, -1, kernel)
+
         R, G, B = cv2.split(self.color_img)
         im_R = cv2.equalizeHist(src=R)
         im_G = cv2.equalizeHist(src=G)
         im_B = cv2.equalizeHist(src=B)
+
         # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         # im_R = clahe.apply(im_R)
         # im_G = clahe.apply(im_G)
         # im_B = clahe.apply(im_B)
-        im = cv2.merge((im_R, im_G, im_B))
+
+        im = cv2.merge((im_B, im_G, im_R))
+        # im = cv2.equalizeHist(self.img_to_gray(self.color_img))
         return im
 
 

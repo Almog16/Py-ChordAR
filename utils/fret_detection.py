@@ -26,7 +26,7 @@ def fret_detection(cropped_neck_img: Image) -> np.array:
                             minLineLength=cropped_neck_img.height * 0.5, maxLineGap=10)
     closing2 = cv2.morphologyEx(edges2, cv2.MORPH_CLOSE, kernel)
     lines2 = cv2.HoughLinesP(image=closing2.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=15,
-                             minLineLength=cropped_neck_img.height * 0.25, maxLineGap=10)
+                             minLineLength=cropped_neck_img.height * 0.15, maxLineGap=10)
 
     lines1 = [line[0] for line in lines1 if 1.01 * line[0][2] >= line[0][0] >= 0.99 * line[0][2]]
     lines2 = [line[0] for line in lines2 if 1.01 * line[0][2] >= line[0][0] >= 0.99 * line[0][2]]
@@ -69,8 +69,7 @@ def calculate_fret_gaps(detected_frets, number_of_frets=19):
 
 def remove_duplicate_vertical_lines(lines, width):
     new_lines = []
-    thresh = width * 0.008
-    print(thresh)
+    thresh = 30#width * 0.0099
     lines_pairwise = zip(lines[:len(lines)], lines[1:])
     for line1, line2 in lines_pairwise:
         if line2[0] - line1[0] > thresh:
