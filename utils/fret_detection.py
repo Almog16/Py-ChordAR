@@ -45,8 +45,8 @@ def fret_detection(cropped_neck_img: Image) -> np.array:
         y2 = line[3] if 1.05 * avg_high_y >= line[3] >= 0.95 * avg_high_y else avg_high_y + 5
         cv2.line(img=cropped_neck_img.color_img, pt1=(x1, y1), pt2=(x2, y2), color=(0, 255, 0),
                  thickness=int(cropped_neck_img.width * 0.002))
-    cropped_neck_img.plot_img()
-    plt.show()
+    # cropped_neck_img.plot_img()
+    # plt.show()
     # calculate_fret_gaps(detected_frets=[itemgetter(0, 2)(x) for x in lines])
     return lines
 
