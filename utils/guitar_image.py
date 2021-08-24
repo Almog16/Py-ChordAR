@@ -64,7 +64,7 @@ class GuitarImage(Image):
                     thickness=int(self.cropped.width * 0.008))
         # self.plot_img()
         # plt.show()
-        # print(drawing_coordinates)
+        print(drawing_coordinates)
         return drawing_coordinates
 
     def crop_neck(self) -> Tuple[Image, int, int]:
