@@ -23,6 +23,7 @@ class GuitarImage(Image):
     def __init__(self, **kwargs) -> None:  # , file_name:str=""):
         Image.__init__(self, **kwargs)  # , file_name=file_name)
         self.rotated, self.rotation_angle, self.image_center = self.rotate_img()
+        self.flipped = Image(img=cv2.flip(src=self.color_img, flipCode=1))
         crop_res = self.crop_neck()
         self.cropped = crop_res[0]
         self.crop_area = self.Crop_Area(crop_res[1], crop_res[2])
@@ -56,7 +57,7 @@ class GuitarImage(Image):
                 restored_coordinate = self.restore_coordinates(rotated_X=x, rotated_Y=y, center=self.image_center)
                 drawing_coordinates.append(restored_coordinate)
                 cv2.circle(
-                    img=self.color_img,
+                    img=self.flipped.color_img,
                     center=(restored_coordinate.x, restored_coordinate.y),
                     radius=1,
                     color=(0, 187, 255),
