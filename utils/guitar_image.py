@@ -64,8 +64,12 @@ class GuitarImage(Image):
                     thickness=int(self.cropped.width * 0.008))
         # self.plot_img()
         # plt.show()
-        print(drawing_coordinates)
+        # print(drawing_coordinates)
         return drawing_coordinates
+
+    def get_chord_coordinates_relative(self, chord_coordinates: List[Coordinate]) -> List[Coordinate]:
+        return [self.Coordinate(x // self.height, y//self.width) for (x,y) in chord_coordinates]
+
 
     def crop_neck(self) -> Tuple[Image, int, int]:
         edges = cv2.Canny(image=self.rotated.blur_gray, threshold1=20, threshold2=45)
