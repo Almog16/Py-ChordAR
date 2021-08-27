@@ -8,6 +8,7 @@ from statistics import median
 from typing import Tuple, Sized, List
 
 import cv2
+import matplotlib.colors
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -22,13 +23,24 @@ class GuitarImage(Image):
 
     def __init__(self, **kwargs) -> None:  # , file_name:str=""):
         Image.__init__(self, **kwargs)  # , file_name=file_name)
+        # print("Start")
+        # self.plot_img()
+        flipped = cv2.flip(src=self.color_img, flipCode=1)
+        self.flipped = Image(img=flipped)
+        self.color_img = flipped
+        # plt.imshow(cv2.cvtColor(self.enhanced_color, cv2.COLOR_BGR2RGB))
+        # plt.show()
+        # print("Flip")
+        # self.plot_img()
         self.rotated, self.rotation_angle, self.image_center = self.rotate_img()
-        self.flipped = Image(img=cv2.flip(src=self.color_img, flipCode=1))
+        # print("Rotation")
+        # self.rotated.plot_img()
         crop_res = self.crop_neck()
         self.cropped = crop_res[0]
         self.crop_area = self.Crop_Area(crop_res[1], crop_res[2])
-        # self.cropped.plot_img()
-        # plt.show()
+        # print("Crop")
+        self.cropped.plot_img()
+        plt.show()
         detected_frets = fret_detection(cropped_neck_img=self.cropped)
         self.frets = self.calculate_frets_xs(detected_frets=detected_frets)
         # height = self.cropped.height // 2
@@ -72,15 +84,24 @@ class GuitarImage(Image):
 
 
     def crop_neck(self) -> Tuple[Image, int, int]:
-        edges = cv2.Canny(image=self.rotated.blur_gray, threshold1=20, threshold2=45)
+        edges = cv2.Canny(image=self.rotated.blur_gray, threshold1=20, threshold2=90)
         edges = cv2.Canny(image=edges, threshold1=20, threshold2=180)
         mag = self.get_magnitude(edges)
         # mag = apply_threshold(img=mag, threshold=127)
+        # cv2.imshow("Before", mag)
+        # cv2.waitKey()
         ret, mag = cv2.threshold(src=mag, thresh=127, maxval=255, type=cv2.THRESH_BINARY)
         # plt.imshow(mag, interpolation='none', cmap='gray')
         # plt.show()
         lines = cv2.HoughLinesP(image=mag.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=18,
-                                minLineLength=45)
+                                minLineLength=46)
+        # print(lines)
+        # for line in lines:
+        #     cv2.line(self.color_img, (line[0][0], line[0][1]), (line[0][2], line[0][3]),
+        #              (255, 0, 0), 3)  # int(cropped_neck_img.height * 0.02))
+        # plt.imshow(self.color_img, interpolation='none', cmap='gray')
+        # plt.show()
+
         y = chain.from_iterable(itemgetter(1, 3)(line[0]) for line in lines)
         y = list(sorted(y))
         y_differences = [0]
@@ -101,7 +122,7 @@ class GuitarImage(Image):
 
     def rotate_img(self) -> Tuple[Image, float, Tuple[float, float]]:
         med_slope = self.calc_med_slope()
-        rotation_angle = med_slope * 55
+        rotation_angle = - med_slope * 60
         image_center = tuple(np.array(self.color_img.shape[1::-1]) / 2)
         rot_mat = cv2.getRotationMatrix2D(image_center, rotation_angle, 1.0)
         rotated = cv2.warpAffine(self.color_img, rot_mat, self.color_img.shape[1::-1], flags=cv2.INTER_LINEAR)

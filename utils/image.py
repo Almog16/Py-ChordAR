@@ -49,13 +49,19 @@ class Image:
         im_R = cv2.equalizeHist(src=R)
         im_G = cv2.equalizeHist(src=G)
         im_B = cv2.equalizeHist(src=B)
+        im = cv2.merge((im_B, im_G, im_R))
+
+
+        alpha = 2  # Contrast control (1.0-3.0)
+        beta = 20  # Brightness control (0-100)
+
+        im = cv2.convertScaleAbs(im, alpha=alpha, beta=beta)
 
         # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         # im_R = clahe.apply(im_R)
         # im_G = clahe.apply(im_G)
         # im_B = clahe.apply(im_B)
 
-        im = cv2.merge((im_B, im_G, im_R))
         # im = cv2.equalizeHist(self.img_to_gray(self.color_img))
         return im
 
