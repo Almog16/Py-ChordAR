@@ -44,7 +44,6 @@ def string_detection(cropped_neck_img: Image, fret_lines):
     for line in lines:
         cv2.line(cropped_neck_img.color_img, (fret_lines[0][0], line[1]), (fret_lines[-1][0], line[3]),
                  (255, 0, 0), 3)#int(cropped_neck_img.height * 0.02))
-    cropped_neck_img.plot_img()
     return lines
 
 
