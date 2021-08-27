@@ -8,7 +8,17 @@ from utils.image import apply_threshold
 
 
 def string_detection(cropped_neck_img: Image, fret_lines):
-    edges = cv2.Sobel(cropped_neck_img.blur_gray, cv2.CV_64F, 0, 1)
+    gray = Image.enhance_gray_image_2(gray_img=Image.img_to_gray(cropped_neck_img.color_img))
+    # plt.imshow(gray,cmap='gray')
+    # plt.show()
+    edges = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
+    # edges = gray
+    # ret, edges1 = cv2.threshold(src=edges, thresh=127, maxval=255, type=cv2.THRESH_TOZERO)
+    # ret, edges2 = cv2.threshold(src=edges, thresh=127, maxval=255, type=cv2.THRESH_TOZERO)
+    # plt.imshow(edges1,cmap='gray')
+    # plt.show()
+    # plt.imshow(edges2,cmap='gray')
+    # plt.show()
     edges1 = apply_threshold(img=edges, threshold=50)
     edges2 = apply_threshold(img=edges, threshold=25)
     # edges3 = apply_threshold(img=edges, threshold=15)
@@ -16,10 +26,10 @@ def string_detection(cropped_neck_img: Image, fret_lines):
     kernel = np.ones((5, 5), np.uint8)
     closing1 = cv2.morphologyEx(edges1, cv2.MORPH_CLOSE, kernel)
     lines1 = cv2.HoughLinesP(image=closing1.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=15,
-                             minLineLength=cropped_neck_img.width * 0.50, maxLineGap=20)
+                             minLineLength=cropped_neck_img.width * 0.4, maxLineGap=50)
     closing2 = cv2.morphologyEx(edges2, cv2.MORPH_CLOSE, kernel)
     lines2 = cv2.HoughLinesP(image=closing2.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=15,
-                             minLineLength=cropped_neck_img.width * 0.22, maxLineGap=20)
+                             minLineLength=cropped_neck_img.width * 0.4, maxLineGap=50)
     # closing3 = cv2.morphologyEx(edges3, cv2.MORPH_CLOSE, kernel)
     # lines3 = cv2.HoughLinesP(image=closing3.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=15,
     #                          minLineLength=cropped_neck_img.width * 0.25, maxLineGap=20)
@@ -34,6 +44,7 @@ def string_detection(cropped_neck_img: Image, fret_lines):
     for line in lines:
         cv2.line(cropped_neck_img.color_img, (fret_lines[0][0], line[1]), (fret_lines[-1][0], line[3]),
                  (255, 0, 0), 3)#int(cropped_neck_img.height * 0.02))
+    cropped_neck_img.plot_img()
     return lines
 
 

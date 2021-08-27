@@ -65,7 +65,39 @@ class Image:
         # im = cv2.equalizeHist(self.img_to_gray(self.color_img))
         return im
 
+    @staticmethod
+    def enhance_gray_image(gray_img):
+        # R, G, B = cv2.split(gray_img)
+        # im = cv2.equalizeHist(src=gray_img)
+        # im_G = cv2.equalizeHist(src=G)
+        # im_B = cv2.equalizeHist(src=B)
+        # im = cv2.merge((im_B, im_G, im_R))
 
+        im = gray_img
+        alpha = 2  # Contrast control (1.0-3.0)
+        beta = -10  # Brightness control (0-100)
+        #
+        im = cv2.convertScaleAbs(im, alpha=alpha, beta=beta)
+        # plt.imshow(im,cmap='gray')
+        # plt.show()
+        return im
+
+    @staticmethod
+    def enhance_gray_image_2(gray_img):
+        # R, G, B = cv2.split(gray_img)
+        # im = cv2.equalizeHist(src=gray_img)
+        # im_G = cv2.equalizeHist(src=G)
+        # im_B = cv2.equalizeHist(src=B)
+        # im = cv2.merge((im_B, im_G, im_R))
+
+        im = gray_img
+        alpha = 2.5  # Contrast control (1.0-3.0)
+        beta = -10  # Brightness control (0-100)
+        #
+        im = cv2.convertScaleAbs(im, alpha=alpha, beta=beta)
+        # plt.imshow(im,cmap='gray')
+        # plt.show()
+        return im
 
 
 def apply_threshold(img, threshold):

@@ -28,19 +28,18 @@ class GuitarImage(Image):
         flipped = cv2.flip(src=self.color_img, flipCode=1)
         self.flipped = Image(img=flipped)
         self.color_img = flipped
-        # plt.imshow(cv2.cvtColor(self.enhanced_color, cv2.COLOR_BGR2RGB))
-        # plt.show()
         # print("Flip")
         # self.plot_img()
         self.rotated, self.rotation_angle, self.image_center = self.rotate_img()
         # print("Rotation")
         # self.rotated.plot_img()
         crop_res = self.crop_neck()
-        self.cropped = crop_res[0]
         self.crop_area = self.Crop_Area(crop_res[1], crop_res[2])
+        self.cropped = crop_res[0]
+        # self.cropped = Image(img=self.cropped.enhance_cropped_image())
         # print("Crop")
-        self.cropped.plot_img()
-        plt.show()
+        # self.cropped.plot_img()
+        # plt.show()
         detected_frets = fret_detection(cropped_neck_img=self.cropped)
         self.frets = self.calculate_frets_xs(detected_frets=detected_frets)
         # height = self.cropped.height // 2
