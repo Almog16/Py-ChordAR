@@ -81,7 +81,7 @@ def fret_detection_with_hough_lines(cropped_neck_img: Image) -> np.array:
             else:
                 slope = 100000
             y_axis_intr = pt1[1] - slope * pt1[0]
-            if math.fabs(slope) < 1:
+            if math.fabs(slope) < 4:
                 y_in_middle = slope * width / 2 + y_axis_intr
                 horizontal_lines.append((slope,
                                          y_axis_intr,

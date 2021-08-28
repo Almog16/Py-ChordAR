@@ -14,31 +14,24 @@ def string_detection(cropped_neck_img: Image, fret_lines):
     gray = enhance_gray_image_for_string_detection(gray_img=Image.img_to_gray(cropped_neck_img.color_img))
     # plt.imshow(gray,cmap='gray')
     # plt.show()
-    edges = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
-    # edges = gray
-    # ret, edges1 = cv2.threshold(src=edges, thresh=127, maxval=255, type=cv2.THRESH_TOZERO)
-    # ret, edges2 = cv2.threshold(src=edges, thresh=127, maxval=255, type=cv2.THRESH_TOZERO)
-    # plt.imshow(edges1,cmap='gray')
-    # plt.show()
-    # plt.imshow(edges2,cmap='gray')
-    # plt.show()
-    edges1 = apply_threshold(img=edges, threshold=50)
-    edges2 = apply_threshold(img=edges, threshold=25)
+    edges = cv2.Canny(image=gray.astype(np.uint8), threshold1=50, threshold2=200, apertureSize=3) # cv2.Sobel(gray, cv2.CV_8U, 0, 1)
+    edges1 = apply_threshold(img=edges, threshold=25)
+    # edges2 = apply_threshold(img=edges, threshold=25)
 
     kernel = np.ones((5, 5), np.uint8)
     closing1 = cv2.morphologyEx(edges1, cv2.MORPH_CLOSE, kernel)
-    lines1 = cv2.HoughLinesP(image=closing1.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=15,
+    lines1 = cv2.HoughLinesP(image=closing1.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=18,
                              minLineLength=cropped_neck_img.width * 0.4, maxLineGap=50)
-    closing2 = cv2.morphologyEx(edges2, cv2.MORPH_CLOSE, kernel)
-    lines2 = cv2.HoughLinesP(image=closing2.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=15,
-                             minLineLength=cropped_neck_img.width * 0.4, maxLineGap=50)
+    # closing2 = cv2.morphologyEx(edges2, cv2.MORPH_CLOSE, kernel)
+    # lines2 = cv2.HoughLinesP(image=closing2.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=80,
+    #                          minLineLength=cropped_neck_img.width * 0.4, maxLineGap=40)
 
     lines1 = [line[0] for line in lines1]
-    lines2 = [line[0] for line in lines2]
-    lines = lines1 + lines2
+    # lines2 = [line[0] for line in lines2]
+    lines = lines1 #+ lines2
 
     lines = sorted(lines, key=lambda line: line[1])
-    lines = remove_duplicate_horizontal_lines(lines=lines, height=cropped_neck_img.height)
+    lines = remove_duplicate_horizontal_lines_test(lines=lines, height=cropped_neck_img.height)
     for line in lines:
         cv2.line(cropped_neck_img.color_img, (fret_lines[0][0][0], line[1]), (fret_lines[-1][0][0], line[3]),
                  (255, 0, 0), 3) # int(cropped_neck_img.height * 0.02))
@@ -48,11 +41,11 @@ def string_detection(cropped_neck_img: Image, fret_lines):
 def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
     gray = cropped_neck_img.img_to_gray(enhance_gray_image_for_string_detection(cropped_neck_img.color_img))
     # edges = cv2.Sobel(gray, cv2.CV_8U, 0, 1)
-    dst = cv2.Canny(image=gray.astype(np.uint8), threshold1=50, threshold2=200, apertureSize=3)
+    dst = cv2.Canny(image=gray.astype(np.uint8), threshold1=100, threshold2=200, apertureSize=3)
     cdst = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
     height = cropped_neck_img.height
     width = cropped_neck_img.width
-    lines = cv2.HoughLines(image=dst.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=80)
+    lines = cv2.HoughLines(image=dst.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=320)
     vertical_lines = []
     horizontal_lines = []
 
@@ -72,7 +65,7 @@ def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
             else:
                 slope = 100000
             y_axis_intr = pt1[1] - slope * pt1[0]
-            if math.fabs(slope) < 0.01:
+            if math.fabs(slope) < 0.02:
                 y_in_middle = slope * width / 2 + y_axis_intr
                 horizontal_lines.append((slope,
                                          y_axis_intr,
@@ -87,20 +80,49 @@ def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
                                        pt2,  # (abs(pt2[0]), abs(pt2[1])),
                                        x_in_middle))
 
-        horizontal_lines = [[line[2], line[3]] for line in horizontal_lines]
+        horizontal_lines = [[line[2], line[3]] for line in horizontal_lines] # if line[0] >= 0]
         lines = sorted(horizontal_lines, key=lambda line: line[0][1])
         lines = np.array(remove_duplicate_horizontal_lines(lines=lines, height=height))
 
+        starting_color = 100
+
         for line in lines:
+            starting_color += 40
             cv2.line(cropped_neck_img.color_img, line[0], line[1], (255, 0, 0), 3, cv2.LINE_AA)
         return lines
+
+def remove_duplicate_horizontal_lines_test(lines, height):
+    new_lines = []
+    lines_pairwise = zip(lines[:len(lines)], lines[1:])
+    min_space = height * 0.065
+    for line1, line2 in lines_pairwise:
+        if line2[1] - line1[1] > min_space:
+            new_lines.append(line1)
+    if lines[-1][1] - new_lines[-1][1] > min_space:
+        new_lines.append(lines[-1])
+    return new_lines
+
+def ccw(A,B,C):
+    return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+
+# Return true if line segments AB and CD intersect
+def intersect(A,B,C,D):
+    return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
 
 def remove_duplicate_horizontal_lines(lines, height):
     new_lines = []
     lines_pairwise = zip(lines[:len(lines)], lines[1:])
-    min_space = 12
+    min_space = 15
     for line1, line2 in lines_pairwise:
-        if line2[0][1] - line1[0][1] > min_space or line2[1][1] - line1[1][1] > min_space:
+        line1_start, line1_end = line1
+        line2_start, line2_end = line2
+        intersecting = intersect(line1_start, line1_end, line2_start, line2_end)
+        mid_line1 = (line1[0][1] + line1[1][1]) / 2
+        mid_line2 = (line2[0][1] + line2[1][1]) / 2
+        if abs(mid_line2 - mid_line1) > min_space or \
+                line1_start[1] - line2_start[1] > min_space or \
+                line1_end[1] - line2_end[1] > min_space or \
+                not intersecting:
             new_lines.append(line1)
     if lines[-1][0][1] - new_lines[-1][0][1] > min_space or lines[-1][1][1] - lines[-1][1][1] > min_space:
         new_lines.append(lines[-1])
