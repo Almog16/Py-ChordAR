@@ -106,9 +106,9 @@ def fret_detection_with_hough_lines(cropped_neck_img: Image) -> np.array:
         # cv2.imshow(str(line[0]) + " " + str(line[1]), cdst)
         # cv2.waitKey()
     #
-    plt.imshow(cdst)
-    # cv2.imshow("Detected lines - Probabilistic Houh Line Transform", cdstP)
-    plt.show()
+    # plt.imshow(cdst)
+    # # cv2.imshow("Detected lines - Probabilistic Houh Line Transform", cdstP)
+    # plt.show()
     return lines
 
 def calculate_fret_gaps(detected_frets, number_of_frets=19):

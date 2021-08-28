@@ -1,3 +1,5 @@
+import math
+
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
@@ -41,6 +43,48 @@ def string_detection(cropped_neck_img: Image, fret_lines):
         cv2.line(cropped_neck_img.color_img, (fret_lines[0][0][0], line[1]), (fret_lines[-1][0][0], line[3]),
                  (255, 0, 0), 3) # int(cropped_neck_img.height * 0.02))
     return lines
+
+
+def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
+    gray = cropped_neck_img.img_to_gray(cropped_neck_img.color_img)
+    dst = cv2.Canny(image=gray, threshold1=50, threshold2=200, apertureSize=3)
+    cdst = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
+    height = cropped_neck_img.height
+    width = cropped_neck_img.width
+    lines = cv2.HoughLines(image=dst.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=80)
+    vertical_lines = []
+    horizontal_lines = []
+
+    if lines is not None:
+        for i in range(0, len(lines)):
+            rho = lines[i][0][0]
+            theta = lines[i][0][1]
+            a = math.cos(theta)
+            b = math.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            pt1 = (int(x0 + 2000 * (-b)), int(y0 + 2000 * (a)))
+            pt2 = (int(x0 - 2000 * (-b)), int(y0 - 2000 * (a)))
+
+            if pt2[0] - pt1[0] != 0:
+                slope = (pt2[1] - pt1[1]) / (pt2[0] - pt1[0])
+            else:
+                slope = 100000
+            y_axis_intr = pt1[1] - slope * pt1[0]
+            if math.fabs(slope) < 0.06:
+                y_in_middle = slope * width / 2 + y_axis_intr
+                horizontal_lines.append((slope,
+                                         y_axis_intr,
+                                         pt1,
+                                         pt2,
+                                         y_in_middle))
+            else:
+                x_in_middle = (height / 2 - y_axis_intr) / slope
+                vertical_lines.append((slope,
+                                       y_axis_intr,
+                                       pt1,  # (abs(pt1[0]), abs(pt1[1])),
+                                       pt2,  # (abs(pt2[0]), abs(pt2[1])),
+                                       x_in_middle))
 
 
 def remove_duplicate_horizontal_lines(lines, height):

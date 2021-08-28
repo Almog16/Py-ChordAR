@@ -15,8 +15,8 @@ if __name__ == '__main__':
             guitar = GuitarImage(
             img_path=Path(rf"C:\Users\almogsh\PycharmProjects\Py_ChordAR\photos\asd\ella\{filename}"))  # , file_name=filename)
             # guitar.cropped.plot_img()
-            guitar.get_chord_coordinates(Emaj_chord)
-            guitar.plot_img()
+            # guitar.get_chord_coordinates(Emaj_chord)
+            # guitar.plot_img()
             print(filename + " SUCCESS")
         except Exception as e:
             print(rf"{filename} : {e}")
