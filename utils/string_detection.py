@@ -91,6 +91,7 @@ def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
             cv2.line(cropped_neck_img.color_img, line[0], line[1], (255, 0, 0), 3, cv2.LINE_AA)
         return lines
 
+
 def remove_duplicate_horizontal_lines_test(lines, height):
     new_lines = []
     lines_pairwise = zip(lines[:len(lines)], lines[1:])
@@ -102,12 +103,15 @@ def remove_duplicate_horizontal_lines_test(lines, height):
         new_lines.append(lines[-1])
     return new_lines
 
+
 def ccw(A,B,C):
     return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+
 
 # Return true if line segments AB and CD intersect
 def intersect(A,B,C,D):
     return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
+
 
 def remove_duplicate_horizontal_lines(lines, height):
     new_lines = []
@@ -119,10 +123,11 @@ def remove_duplicate_horizontal_lines(lines, height):
         intersecting = intersect(line1_start, line1_end, line2_start, line2_end)
         mid_line1 = (line1[0][1] + line1[1][1]) / 2
         mid_line2 = (line2[0][1] + line2[1][1]) / 2
-        if abs(mid_line2 - mid_line1) > min_space or \
-                line1_start[1] - line2_start[1] > min_space or \
-                line1_end[1] - line2_end[1] > min_space or \
-                not intersecting:
+        if not intersecting and (
+                abs(mid_line2 - mid_line1) > min_space or \
+                abs(line1_start[1] - line2_start[1]) > min_space or \
+                abs(line1_end[1] - line2_end[1]) > min_space
+        ):
             new_lines.append(line1)
     if lines[-1][0][1] - new_lines[-1][0][1] > min_space or lines[-1][1][1] - lines[-1][1][1] > min_space:
         new_lines.append(lines[-1])
