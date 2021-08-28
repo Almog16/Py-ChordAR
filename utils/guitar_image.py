@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 
 from utils.fret_detection import fret_detection, fret_detection_with_hough_lines
 from utils.image import Image
-from utils.string_detection import string_detection
+from utils.string_detection import string_detection, string_detection_with_hough_lines
 
 
 class GuitarImage(Image):
@@ -25,11 +25,10 @@ class GuitarImage(Image):
         Image.__init__(self, **kwargs)  # , file_name=file_name)
         self.color_img = cv2.flip(src=self.color_img, flipCode=1)
         self.rotated, self.rotation_angle, self.image_center = self.rotate_img()
-        crop_res = self.crop_neck_with_hough_lines()
+        crop_res = self.crop_neck() #crop_neck_with_hough_lines()
         self.crop_area = self.Crop_Area(crop_res[1], crop_res[2])
         self.cropped = crop_res[0]
         detected_frets = fret_detection_with_hough_lines(cropped_neck_img=self.cropped) #fret_detection(cropped_neck_img=self.cropped)
-        self.cropped.plot_img()
         self.frets = self.calculate_frets_xs(detected_frets=detected_frets)
         # height = self.cropped.height // 2
         # for fret in self.frets:
@@ -40,8 +39,12 @@ class GuitarImage(Image):
         #     int(self.cropped.width * 0.002))
         #
         # self.cropped.plot_img()
-        detected_strings = string_detection(cropped_neck_img=self.cropped, fret_lines=detected_frets)
-        self.strings = [(string[1] + string[3]) // 2 for string in detected_strings]
+        crop_res2 = self.crop_neck_with_hough_lines()  # crop_neck_with_hough_lines()
+        self.crop_area_2 = self.Crop_Area(crop_res2[1], crop_res2[2])
+        self.cropped_2 = crop_res2[0]
+        detected_strings = string_detection_with_hough_lines(cropped_neck_img=self.cropped_2, fret_lines=detected_frets)
+        self.cropped_2.plot_img()
+        # self.strings = [(string[1] + string[3]) // 2 for string in detected_strings]
 
     @staticmethod
     def calculate_frets_xs(detected_frets: Sized) -> List[int]:

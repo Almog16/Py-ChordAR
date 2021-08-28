@@ -46,8 +46,9 @@ def string_detection(cropped_neck_img: Image, fret_lines):
 
 
 def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
-    gray = cropped_neck_img.img_to_gray(cropped_neck_img.color_img)
-    dst = cv2.Canny(image=gray, threshold1=50, threshold2=200, apertureSize=3)
+    gray = cropped_neck_img.img_to_gray(enhance_gray_image_for_string_detection(cropped_neck_img.color_img))
+    # edges = cv2.Sobel(gray, cv2.CV_8U, 0, 1)
+    dst = cv2.Canny(image=gray.astype(np.uint8), threshold1=50, threshold2=200, apertureSize=3)
     cdst = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
     height = cropped_neck_img.height
     width = cropped_neck_img.width
@@ -71,7 +72,7 @@ def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
             else:
                 slope = 100000
             y_axis_intr = pt1[1] - slope * pt1[0]
-            if math.fabs(slope) < 0.06:
+            if math.fabs(slope) < 0.01:
                 y_in_middle = slope * width / 2 + y_axis_intr
                 horizontal_lines.append((slope,
                                          y_axis_intr,
@@ -86,15 +87,22 @@ def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
                                        pt2,  # (abs(pt2[0]), abs(pt2[1])),
                                        x_in_middle))
 
+        horizontal_lines = [[line[2], line[3]] for line in horizontal_lines]
+        lines = sorted(horizontal_lines, key=lambda line: line[0][1])
+        lines = np.array(remove_duplicate_horizontal_lines(lines=lines, height=height))
+
+        for line in lines:
+            cv2.line(cropped_neck_img.color_img, line[0], line[1], (255, 0, 0), 3, cv2.LINE_AA)
+        return lines
 
 def remove_duplicate_horizontal_lines(lines, height):
     new_lines = []
     lines_pairwise = zip(lines[:len(lines)], lines[1:])
-    min_space = height * 0.065
+    min_space = 12
     for line1, line2 in lines_pairwise:
-        if line2[1] - line1[1] > min_space:
+        if line2[0][1] - line1[0][1] > min_space or line2[1][1] - line1[1][1] > min_space:
             new_lines.append(line1)
-    if lines[-1][1] - new_lines[-1][1] > min_space:
+    if lines[-1][0][1] - new_lines[-1][0][1] > min_space or lines[-1][1][1] - lines[-1][1][1] > min_space:
         new_lines.append(lines[-1])
     return new_lines
 

@@ -102,7 +102,7 @@ def fret_detection_with_hough_lines(cropped_neck_img: Image) -> np.array:
     lines = np.array(remove_duplicate_vertical_lines(lines=lines, width = cropped_neck_img.width))
 
     for line in lines:
-        cv2.line(cdst, line[0], line[1], (0,0,255), 3, cv2.LINE_AA)
+        cv2.line(cropped_neck_img.color_img, line[0], line[1], (0,0,255), 3, cv2.LINE_AA)
         # cv2.imshow(str(line[0]) + " " + str(line[1]), cdst)
         # cv2.waitKey()
     #
