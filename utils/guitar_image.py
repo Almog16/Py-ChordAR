@@ -12,7 +12,7 @@ import matplotlib.colors
 import numpy as np
 from matplotlib import pyplot as plt
 
-from utils.fret_detection import fret_detection
+from utils.fret_detection import fret_detection, fret_detection_with_hough_lines
 from utils.image import Image
 from utils.string_detection import string_detection
 
@@ -23,40 +23,38 @@ class GuitarImage(Image):
 
     def __init__(self, **kwargs) -> None:  # , file_name:str=""):
         Image.__init__(self, **kwargs)  # , file_name=file_name)
-        # print("Start")
-        # self.plot_img()
-        flipped = cv2.flip(src=self.color_img, flipCode=1)
-        self.flipped = Image(img=flipped)
-        self.color_img = flipped
-        # print("Flip")
-        # self.plot_img()
+        self.color_img = cv2.flip(src=self.color_img, flipCode=1)
         self.rotated, self.rotation_angle, self.image_center = self.rotate_img()
-        # print("Rotation")
-        # self.rotated.plot_img()
         crop_res = self.crop_neck()
         self.crop_area = self.Crop_Area(crop_res[1], crop_res[2])
         self.cropped = crop_res[0]
-        # self.cropped = Image(img=self.cropped.enhance_cropped_image())
-        # print("Crop")
-        # self.cropped.plot_img()
-        # plt.show()
-        detected_frets = fret_detection(cropped_neck_img=self.cropped)
+        detected_frets = fret_detection_with_hough_lines(cropped_neck_img=self.cropped) #fret_detection(cropped_neck_img=self.cropped)
         self.frets = self.calculate_frets_xs(detected_frets=detected_frets)
-        # height = self.cropped.height // 2
-        # for fret in self.frets:
-        #     cv2.line(self.cropped.color_img, (fret, height), (fret, height + 10), (0, 187, 255), int(self.cropped.width * 0.002))
+        height = self.cropped.height // 2
+        for fret in self.frets:
+            cv2.line(self.cropped.color_img,
+            (fret, height),
+            (fret, height + 10),
+            (0, 187, 255),
+            int(self.cropped.width * 0.002))
+
+        self.cropped.plot_img()
         detected_strings = string_detection(cropped_neck_img=self.cropped, fret_lines=detected_frets)
         self.strings = [(string[1] + string[3]) // 2 for string in detected_strings]
-        # self.cropped.save_img()
-        # self.rotated.plot_img()
-        # plt.show()
 
     @staticmethod
     def calculate_frets_xs(detected_frets: Sized) -> List[int]:
-        detected_frets_pairwise = [
-            (t[0][0], t[1][0]) for t in zip(detected_frets[:len(detected_frets)], detected_frets[1:])
-        ]
-        return list([(line[0] + line[1]) // 2 for line in detected_frets_pairwise])
+        fret_xs = [(line[0][0] + line[1][0])//2 for line in detected_frets]
+        fret_xs_pairwise = zip(fret_xs[:len(fret_xs)], fret_xs[1:])
+        return list([(xs[0] + xs[1]) // 2 for xs in fret_xs_pairwise])
+
+
+
+
+        # detected_frets_pairwise = [
+        #     (t[0][0], t[1][0]) for t in zip(detected_frets[:len(detected_frets)], detected_frets[1:])
+        # ]
+        # return list(sorted([(line[0][0] + line[0][1]) // 2 for line in detected_frets_pairwise]))
 
     def get_chord_coordinates(self, chord_to_draw: str) -> List[Coordinate]:
         note_by_string = chord_to_draw.split(',')
@@ -68,38 +66,26 @@ class GuitarImage(Image):
                 restored_coordinate = self.restore_coordinates(rotated_X=x, rotated_Y=y, center=self.image_center)
                 drawing_coordinates.append(restored_coordinate)
                 cv2.circle(
-                    img=self.flipped.color_img,
+                    img=self.color_img,
                     center=(restored_coordinate.x, restored_coordinate.y),
                     radius=1,
                     color=(0, 187, 255),
                     thickness=int(self.cropped.width * 0.008))
-        # self.plot_img()
-        # plt.show()
-        # print(drawing_coordinates)
         return drawing_coordinates
 
     def get_chord_coordinates_relative(self, chord_coordinates: List[Coordinate]) -> List[Coordinate]:
         return [self.Coordinate(x // self.height, y//self.width) for (x,y) in chord_coordinates]
 
-
     def crop_neck(self) -> Tuple[Image, int, int]:
         edges = cv2.Canny(image=self.rotated.blur_gray, threshold1=20, threshold2=90)
         edges = cv2.Canny(image=edges, threshold1=20, threshold2=180)
         mag = self.get_magnitude(edges)
-        # mag = apply_threshold(img=mag, threshold=127)
-        # cv2.imshow("Before", mag)
-        # cv2.waitKey()
         ret, mag = cv2.threshold(src=mag, thresh=127, maxval=255, type=cv2.THRESH_BINARY)
-        # plt.imshow(mag, interpolation='none', cmap='gray')
-        # plt.show()
         lines = cv2.HoughLinesP(image=mag.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=18,
                                 minLineLength=46)
-        # print(lines)
         # for line in lines:
         #     cv2.line(self.color_img, (line[0][0], line[0][1]), (line[0][2], line[0][3]),
         #              (255, 0, 0), 3)  # int(cropped_neck_img.height * 0.02))
-        # plt.imshow(self.color_img, interpolation='none', cmap='gray')
-        # plt.show()
 
         y = chain.from_iterable(itemgetter(1, 3)(line[0]) for line in lines)
         y = list(sorted(y))
@@ -117,7 +103,12 @@ class GuitarImage(Image):
                     first_y = y[i]
 
         return Image(img=self.rotated.color_img[first_y - 10:last_y + 10]), first_y - 10, last_y + 10
-        # file_name=rotated_guitar_image.name), first_y - 10, last_y + 10
+
+
+    # def crop_neck_with_hough_lines(self) -> Tuple[Image, int, int]:
+    #     edges = cv2.Canny(image=self.rotated.blur_gray, threshold1=50, threshold2=200, apertureSize=3)
+
+
 
     def rotate_img(self) -> Tuple[Image, float, Tuple[float, float]]:
         med_slope = self.calc_med_slope()

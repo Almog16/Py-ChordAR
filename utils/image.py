@@ -6,18 +6,17 @@ import numpy as np
 
 
 class Image:
-    def __init__(self, img_path: Path=None, img=None): #, file_name: str=""):
+    def __init__(self, img_path: Path=None, img=None):
         if img is None:
             self.color_img = self.load_img(str(img_path))
         else:
             self.color_img = img
-        # self.name = file_name
         self.height = len(self.color_img)
         self.width = len(self.color_img[0])
         self.enhanced_color = self.enhance_image()
         self.gray = self.img_to_gray(self.enhanced_color)
 
-        ksize = 5 #int(self.width * 0.0025)
+        ksize = 5 # int(self.width * 0.0025)
         # ksize = ksize if ksize % 2 == 1 else ksize + 1
         self.blur_gray = cv2.GaussianBlur(self.gray, (ksize, ksize), 0)
 
@@ -25,10 +24,6 @@ class Image:
         plt.imshow(self.color_img, interpolation='none') if not gray \
             else plt.imshow(self.gray, interpolation='none', cmap='gray')
         plt.show()
-
-    # def save_img(self):
-    #     plt.imsave(str(Path(rf"C:\Users\almogsh\PycharmProjects\Py_ChordAR\photos\working\test\{self.name}.png")),
-    #                self.color_img)
 
     @staticmethod
     def load_img(file_path):
@@ -82,22 +77,6 @@ class Image:
         # plt.show()
         return im
 
-    @staticmethod
-    def enhance_gray_image_2(gray_img):
-        # R, G, B = cv2.split(gray_img)
-        # im = cv2.equalizeHist(src=gray_img)
-        # im_G = cv2.equalizeHist(src=G)
-        # im_B = cv2.equalizeHist(src=B)
-        # im = cv2.merge((im_B, im_G, im_R))
-
-        im = gray_img
-        alpha = 2.5  # Contrast control (1.0-3.0)
-        beta = -10  # Brightness control (0-100)
-        #
-        im = cv2.convertScaleAbs(im, alpha=alpha, beta=beta)
-        # plt.imshow(im,cmap='gray')
-        # plt.show()
-        return im
 
 
 def apply_threshold(img, threshold):
