@@ -96,16 +96,24 @@ def fret_detection_with_hough_lines(cropped_neck_img: Image) -> np.array:
                                        pt2, #(abs(pt2[0]), abs(pt2[1])),
                                        x_in_middle))
 
-    vertical_lines = [[line[2], line[3]] for line in vertical_lines] #if 1.4 * line[2][0] >= line[3][0] >= 0.6 * line[2][0]]
+    # vertical_lines = [[line[2], line[3]] for line in vertical_lines] #if 1.4 * line[2][0] >= line[3][0] >= 0.6 * line[2][0]]
 
-    lines = sorted(vertical_lines, key=lambda line: line[0][0])
-    lines = np.array(remove_duplicate_vertical_lines(lines=lines, width = cropped_neck_img.width))
+    lines = sorted(vertical_lines, key=lambda line: line[4]) # changed to mid X
+
+    #
+    # for line in lines:
+    #     cv2.line(cropped_neck_img.color_img, line[2], line[3], (0,0,255), 3, cv2.LINE_AA)
+
+    lines = remove_duplicate_vertical_lines_test(lines=lines)
+
+    lines = [[line[2], line[3]] for line in
+                      lines]  # if 1.4 * line[2][0] >= line[3][0] >= 0.6 * line[2][0]]
 
     for line in lines:
         cv2.line(cropped_neck_img.color_img, line[0], line[1], (0,0,255), 3, cv2.LINE_AA)
-        # cv2.imshow(str(line[0]) + " " + str(line[1]), cdst)
-        # cv2.waitKey()
-    #
+    #     cv2.imshow(str(line[0]) + " " + str(line[1]), cdst)
+    #     cv2.waitKey()
+    # #
     # plt.imshow(cdst)
     # # cv2.imshow("Detected lines - Probabilistic Houh Line Transform", cdstP)
     # plt.show()
@@ -136,4 +144,25 @@ def remove_duplicate_vertical_lines(lines, width):
             new_lines.append(line1)
     if lines[-1][0][0] - new_lines[-1][0][0] > thresh or lines[-1][1][0] - new_lines[-1][1][0] > thresh:
         new_lines.append(lines[-1])
+    return new_lines
+
+
+def remove_duplicate_vertical_lines_test(lines):
+    # uses mid X instead of point, so expects lines in format of the original tuple with 5 parts
+
+    new_lines = []
+    min_gap_first_frets = 45 # width * 0.0099
+    min_gap_last_frets = 30
+    max_gap = 160
+    lines_pairwise = zip(lines[:len(lines)], lines[1:])
+    # TODO: find a way to avoid ignoring a fret due to many lines with small gap (skipped due to pairs)
+    # example: |...|.|.|.|..  -> only two are taken though there are three. maybe compare to last saved fret instead
+    for line1, line2 in lines_pairwise:
+        gap = min_gap_first_frets if len(new_lines) < 6 else min_gap_last_frets
+        if max_gap > line2[4] - line1[4] > gap:
+            new_lines.append(line1)
+    if max_gap > lines[-1][4] - new_lines[-1][4] > min_gap_last_frets:
+        new_lines.append(lines[-1])
+
+    # TODO: if one gap is more than 160 after this raise an error that tells the user to remove his bloody hands
     return new_lines

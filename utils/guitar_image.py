@@ -30,6 +30,7 @@ class GuitarImage(Image):
         self.cropped = crop_res[0]
         detected_frets = fret_detection_with_hough_lines(cropped_neck_img=self.cropped) #fret_detection(cropped_neck_img=self.cropped)
         self.frets = self.calculate_frets_xs(detected_frets=detected_frets)
+        # self.cropped.plot_img()
         # height = self.cropped.height // 2
         # for fret in self.frets:
         #     cv2.line(self.cropped.color_img,
@@ -37,22 +38,20 @@ class GuitarImage(Image):
         #     (fret, height + 10),
         #     (0, 187, 255),
         #     int(self.cropped.width * 0.002))
-        #
-        # self.cropped.plot_img()
+
+        self.cropped.plot_img()
         # crop_res2 = self.crop_neck_with_hough_lines()  # crop_neck_with_hough_lines()
         # self.crop_area_2 = self.Crop_Area(crop_res2[1], crop_res2[2])
         # self.cropped_2 = crop_res2[0]
         detected_strings = string_detection_with_hough_lines(cropped_neck_img=self.cropped, fret_lines=detected_frets)
         self.cropped.plot_img()
-        # self.strings = [(string[1] + string[3]) // 2 for string in detected_strings]
+        self.strings = [(string[0][1] + string[1][1]) // 2 for string in detected_strings]
 
     @staticmethod
     def calculate_frets_xs(detected_frets: Sized) -> List[int]:
         fret_xs = [(line[0][0] + line[1][0])//2 for line in detected_frets]
         fret_xs_pairwise = zip(fret_xs[:len(fret_xs)], fret_xs[1:])
         return list([(xs[0] + xs[1]) // 2 for xs in fret_xs_pairwise])
-
-
 
 
         # detected_frets_pairwise = [
@@ -75,6 +74,8 @@ class GuitarImage(Image):
                     radius=1,
                     color=(0, 187, 255),
                     thickness=int(self.cropped.width * 0.008))
+                # cv2.imshow("string: " + str(string) + ", fret: " + str(fret), cv2.cvtColor(self.color_img, cv2.COLOR_BGR2RGB))
+                # cv2.waitKey()
         return drawing_coordinates
 
     def get_chord_coordinates_relative(self, chord_coordinates: List[Coordinate]) -> List[Coordinate]:
