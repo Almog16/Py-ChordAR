@@ -5,6 +5,8 @@ from pathlib import Path
 import cv2
 from matplotlib import pyplot as plt
 
+from error_handling.fingers_hiding_neck import FingersHidingNeckError
+from error_handling.not_enough_strings_detected import NotEnoughStringsDetected
 from utils.guitar_image import GuitarImage
 
 if __name__ == '__main__':
@@ -20,6 +22,10 @@ if __name__ == '__main__':
             # GuitarImage.i += 1
             guitar.plot_img()
             print(filename + " SUCCESS")
+        except FingersHidingNeckError:
+            print("Fingers are hiding the guitar's neck")
+        except NotEnoughStringsDetected:
+            print("Not enough strings detected")
         except Exception as e:
             print(rf"{filename} : {e}")
     # guitar = GuitarImage(img_path=Path(

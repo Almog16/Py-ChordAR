@@ -4,6 +4,7 @@ from itertools import zip_longest
 import cv2
 import numpy as np
 
+from error_handling.fingers_hiding_neck import FingersHidingNeckError
 from utils.image import Image
 from utils.image import apply_threshold
 
@@ -146,6 +147,13 @@ def remove_duplicate_vertical_lines_test(lines):
             new_lines.append(line1)
     if max_gap > lines[-1][4] - new_lines[-1][4] > min_gap_last_frets:
         new_lines.append(lines[-1])
-
-    # TODO: if one gap is more than 160 after this raise an error that tells the user to remove his bloody hands
+    check_if_fingers_are_hiding_neck(new_lines)
     return new_lines
+
+
+def check_if_fingers_are_hiding_neck(fret_lines):
+    fret_lines_pairwise = zip(fret_lines[:len(fret_lines)], fret_lines[1:])
+    max_gap = 200
+    for line1, line2 in fret_lines_pairwise:
+        if line2[4] - line1[4] > max_gap:
+            raise FingersHidingNeckError

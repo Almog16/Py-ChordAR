@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
+from error_handling.not_enough_strings_detected import NotEnoughStringsDetected
 from utils import guitar_image
 from utils.fret_detection import remove_duplicate_vertical_lines
 from utils.image import Image
@@ -99,6 +100,8 @@ def string_detection_with_hough_lines(cropped_neck_img: Image, fret_lines):
         for line in lines:
             cv2.line(cropped_neck_img.color_img, line[0], line[1], (255, 0, 0), 3, cv2.LINE_AA)
         lines = list(map(get_string_line_equation_func, lines))
+        if len(lines) != 6:
+            raise NotEnoughStringsDetected
         return lines
 
 
