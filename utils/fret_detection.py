@@ -1,10 +1,8 @@
 import math
 from itertools import zip_longest
-from operator import itemgetter
 
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 
 from utils.image import Image
 from utils.image import apply_threshold
@@ -59,10 +57,10 @@ def fret_detection_with_hough_lines(cropped_neck_img: Image) -> np.array:
     # kernel = np.ones((5, 5), np.uint8)
     # dst = cv2.morphologyEx(dst, cv2.MORPH_CLOSE, kernel)
     cdst = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
-    cdstP = np.copy(cdst)
     height = cropped_neck_img.height
     width = cropped_neck_img.width
     lines = cv2.HoughLines(image=dst.astype(np.uint8), rho=1, theta=np.pi / 180, threshold=80)
+
     vertical_lines = []
     horizontal_lines = []
     if lines is not None:
@@ -73,8 +71,8 @@ def fret_detection_with_hough_lines(cropped_neck_img: Image) -> np.array:
             b = math.sin(theta)
             x0 = a * rho
             y0 = b * rho
-            pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
-            pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+            pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000 * a))
+            pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000 * a))
 
             if pt2[0] - pt1[0] != 0:
                 slope = (pt2[1] - pt1[1]) / (pt2[0] - pt1[0])
@@ -90,33 +88,18 @@ def fret_detection_with_hough_lines(cropped_neck_img: Image) -> np.array:
                                          y_in_middle))
             else:
                 x_in_middle = (height / 2 - y_axis_intr) / slope
-                vertical_lines.append((slope,
-                                       y_axis_intr,
-                                       pt1, #(abs(pt1[0]), abs(pt1[1])),
-                                       pt2, #(abs(pt2[0]), abs(pt2[1])),
-                                       x_in_middle))
-
-    # vertical_lines = [[line[2], line[3]] for line in vertical_lines] #if 1.4 * line[2][0] >= line[3][0] >= 0.6 * line[2][0]]
+                vertical_lines.append((slope, y_axis_intr, pt1, pt2, x_in_middle))
 
     lines = sorted(vertical_lines, key=lambda line: line[4]) # changed to mid X
 
-    #
-    # for line in lines:
-    #     cv2.line(cropped_neck_img.color_img, line[2], line[3], (0,0,255), 3, cv2.LINE_AA)
+    for line in lines:
+        cv2.line(cropped_neck_img.color_img, line[2], line[3], (255, 153, 51), 3, cv2.LINE_AA)
 
     lines = remove_duplicate_vertical_lines_test(lines=lines)
-
-    lines = [[line[2], line[3]] for line in
-                      lines]  # if 1.4 * line[2][0] >= line[3][0] >= 0.6 * line[2][0]]
+    lines = [[line[2], line[3]] for line in lines]  # if 1.4 * line[2][0] >= line[3][0] >= 0.6 * line[2][0]]
 
     for line in lines:
         cv2.line(cropped_neck_img.color_img, line[0], line[1], (0,0,255), 3, cv2.LINE_AA)
-    #     cv2.imshow(str(line[0]) + " " + str(line[1]), cdst)
-    #     cv2.waitKey()
-    # #
-    # plt.imshow(cdst)
-    # # cv2.imshow("Detected lines - Probabilistic Houh Line Transform", cdstP)
-    # plt.show()
     return lines
 
 def calculate_fret_gaps(detected_frets, number_of_frets=19):

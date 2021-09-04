@@ -16,6 +16,8 @@ if __name__ == '__main__':
             img_path=Path(rf"C:\Users\almogsh\PycharmProjects\Py_ChordAR\photos\asd\ella\{filename}"))  # , file_name=filename)
             # guitar.cropped.plot_img()
             guitar.get_chord_coordinates(Emaj_chord)
+            # guitar.save_img(step=f"{guitar.step}_draw_chords", i=guitar.i)
+            # GuitarImage.i += 1
             guitar.plot_img()
             print(filename + " SUCCESS")
         except Exception as e:
